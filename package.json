@@ -1,0 +1,25 @@
+{
+  "name": "soccer-players-filter",
+  "version": "1.0.0",
+  "description": "\"Script that would interact with transfermarkt.com form and retreive data\"",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benhichem/Soccer-Players-filter.git"
+  },
+  "author": "A_esth, Snow",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/benhichem/Soccer-Players-filter/issues"
+  },
+  "homepage": "https://github.com/benhichem/Soccer-Players-filter#readme",
+  "dependencies": {
+    "node-html-parser": "^5.3.3",
+    "nodemon": "^2.0.16",
+    "puppeteer": "^14.3.0"
+  }
+}
