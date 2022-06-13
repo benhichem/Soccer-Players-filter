@@ -35,11 +35,16 @@ const schema_player_search = Joi.object({
         other_position_2: Joi.string(),
         market_value_from: Joi.string(),
         market_value_until: Joi.string(),
-        foot: Joi.string(),
-        captain: Joi.bool(),
-        player_number: Joi.number(),
+        left_foot: Joi.bool(),
+        right_foot: Joi.bool(),
+        both_feet: Joi.bool(),
+        captain_yes: Joi.bool(),
+        captain_no: Joi.bool(),
+        player_number: Joi.number()
+            .min(0)
+            .max(99),
         contract_expiry: Joi.number(),
-        competition: Joi.string(),
+        /*competition: Joi.string(),*/ 
         division: Joi.string(),
         club_from: Joi.string()
 

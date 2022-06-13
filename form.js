@@ -1,4 +1,7 @@
 const puppeteer = require('puppeteer');
+const Joi = require('joi');
+
+const schema_player_search = require('./logic/in_schema');
 
 ( async ()=>{
 
@@ -20,153 +23,118 @@ const puppeteer = require('puppeteer');
         const buttons = await frame.$x('/html/body/div/div[2]/div[3]/div[2]/button')
         await buttons[0].click() 
 
-    // Test data
+    // scrape the countries | #Detailsuche_land_id
+    const countries = await page.$$eval('#Detailsuche_land_id > option:nth-child(n+2)', (countries)=>{
+        return Array.from(countries, country=>{
+            return [country.getAttribute('value'), country.textContent]
+        })
+    })
+    console.log(countries)
+    // scrape the confederations | #Detailsuche_kontinent_id
+    const confederations = await page.$$eval('#Detailsuche_kontinent_id > option:nth-child(n+2)', (confederations)=>{
+        return Array.from(confederations, confederation=>{
+            return [confederation.getAttribute('value'), confederation.textContent]
+        })
+    })
+    console.log(confederations)
+    // position | #Detailsuche_hauptposition_id
+    const positions = await page.$$eval('#Detailsuche_hauptposition_id > option:nth-child(n+2)', (positions)=>{
+        return Array.from(positions, position =>{
+            return [position.getAttribute('value'), position.textContent]
+        })
+    })
+    console.log(positions)
+    const basic_positions = await page.$$eval('#Detailsuche_position > option:nth-child(n+2)', (positions)=>{
+        return Array.from(positions, position =>{
+            return [position.getAttribute('value'), position.textContent]
+        })
+    })
+    console.log(basic_positions)
+    // division | #Detailsuche_art_neu
+    const divisions = await page.$$eval('#Detailsuche_art_neu > option', (divisions)=>{
+        return Array.from(divisions, division =>{
+            return [division.getAttribute('value'), division.textContent]
+        })
+    })
+    console.log(divisions)
+    // national team player | #Detailsuche_nm_status
+    const stati = await page.$$eval('#Detailsuche_nm_status > option', (stati)=>{
+        return Array.from(stati, status =>{
+            return [status.getAttribute('value'), status.textContent]
+        })
+    })
+    console.log(stati)
+    // expiration years | #Detailsuche_vertrag
+    const years = await page.$$eval('#Detailsuche_vertrag > option:nth-child(n+2)', (years)=>{
+        return Array.from(years, year=>{
+            return [year.getAttribute('value'), year.textContent]
+        })
+    })
+    console.log(years)
 
+    // Test data
     const data = {
         name_options:{
-            firstname: 'Ronaldo',
-            /*surname :'sui',
-            pseudonym : 'goat',*/
-            /*fullname: 'Christiano Ronaldo',*/
-            /*exact_search : true*/
+            firstname: 'foo',
+            surname :'boo',
+            pseudonym : 'moo',
+            fullname: 'foo foo',
+            exact_search : true
         },
         personal_data: {
-            birth_place:'Chkoupistan',
+            birth_place:'foo',
             exact_search: true,
-            citizenship: '4',
-            /*second_citizenship: {
-                type: 'select',
-                selector: '#Detailsuche_zweites_land_id'
-            },
-            birth_country: {
-                type: 'select',
-                selector: '#Detailsuche_geb_land_id'
-            },
-            player_confederation: {
-                type: 'select',
-                selector: '#Detailsuche_kontinent_id'
-            },
-            birth_day: {
-                type: 'select',
-                selector: '#Detailsuche_geburtstag'
-            },
-            birth_month: {
-                type: 'select',
-                selector: '#Detailsuche_geburtsmonat'
-            },
-            birth_year: {
-                type: 'select',
-                selector: '#Detailsuche_geburtsjahr'
-            },
-            age: {
-                type: 'fill',
-                selector: '#amountAlter'
-            },
-            year:  {
-                type: 'fill',
-                selector: '#amountJahrgang'
-            },
-            height:  {
-                type: 'fill',
-                selector: '#amountGroesse'
-            }*/
+            citizenship: countries[Math.floor(Math.random()*countries.length)][1],
+            second_citizenship: countries[Math.floor(Math.random()*countries.length)][1],
+            birth_country: countries[Math.floor(Math.random()*countries.length)][1],
+            player_confederation: confederations[Math.floor(Math.random()*confederations.length)][1],
+            birth_day: '2',
+            birth_month: '11',
+            birth_year: '1995',
+            age: '15 - 60',
+            year:  '1997 - 2000',
+            height:  '20 - 100'
 
-        },/*
+        },
         player_data: {
-            position: {
-                type: 'select',
-                selector: '#Detailsuche_position'
-            },
-            main_position: {
-                type: 'select',
-                selector: '#Detailsuche_hauptposition_id'
-            },
-            other_position_1: {
-                type: 'select',
-                selector: '#Detailsuche_nebenposition_id_1'
-            },
-            other_position_2:    {
-                type: 'select',
-                selector: '#Detailsuche_nebenposition_id_2'
-            },
-            market_value_from: {
-                type: 'fill',
-                selector: '#Detailsuche_minMarktwert'
-            } ,
-            market_value_until: {
-                type: 'fill',
-                selector: '#Detailsuche_maxMarktwert'
-            } ,
-            left_foot: {
-                type: 'tick',
-                selector: '#Detailsuche_fuss_id_0'
-            },
-            right_foot: {
-                type: 'tick',
-                selector: '#Detailsuche_fuss_id_1'
-            },
-            both_feet: {
-                type: 'tick',
-                selector: '#Detailsuche_fuss_id_2'
-            },
-            captain_yes: {
-                type: 'tick',
-                selector: '#Detailsuche_captain_0'
-            },
-            captain_no: {
-                type: 'tick',
-                selector: '#Detailsuche_captain_1'
-            },
-            player_number: {
-                type: 'fill',
-                selector: '#Detailsuche_rn'
-            },
-            contract_expiry: {
-                type: 'select',
-                selector: '#Detailsuche_vertrag'
-            },
-            competition: {
-                type: 'fill',
-                selector: '#token-input-Detailsuche_wettbewerb_id'
-            },
-            division: {
-                type: 'select',
-                selector: '#Detailsuche_art_neu'
-            },
-            club_from: {
-                type: 'select',
-                selector: '#Detailsuche_w_land_id'
-            }
+            position: [
+                basic_positions[Math.floor(Math.random()*basic_positions.length)][1],
+                basic_positions[Math.floor(Math.random()*basic_positions.length)][1]
+        ],
+            main_position: positions[Math.floor(Math.random()*positions.length)][1] ,
+            other_position_1: positions[Math.floor(Math.random()*positions.length)][1],
+            other_position_2: positions[Math.floor(Math.random()*positions.length)][1],
+            market_value_from: '200' ,
+            market_value_until: '50000',
+            left_foot: true,
+            right_foot: true,
+            both_feet: true,
+            captain_yes: true,
+            captain_no: true,
+            player_number: '7',
+            contract_expiry: 
+                years[Math.floor(Math.random()*years.length)][1]
+        ,
+            /*competition: 'foo',*/
+            division: [
+                divisions[Math.floor(Math.random()*divisions.length)][1],
+                'moo'
+            ],
+            club_from: countries[Math.floor(Math.random()*countries.length)][1]
 
         },
         national_team_data: {
-            national_team_players:{
-                type: 'fill',
-                selector: '#Detailsuche_nm_status'
-            }, 
-            national_team_appearances: {
-                type: 'fill',
-                selector: '#Detailsuche_passname'
-            }
+            national_team_players: [
+                stati[Math.floor(Math.random()*stati.length)][1]
+            ], 
+            national_team_appearances: '15 - 100'
         },
         contract_active: {
-            exclude_new_contract: {
-                type: 'tick',
-                selector: '#Detailsuche_trans_id'
-            },
-            active_players_only: {
-                type: 'tick',
-                selector: '#Detailsuche_aktiv'
-            },
-            players_without_club_only: {
-                type: 'tick',
-                selector: '#Detailsuche_vereinslos'
-            },
-            exclude_loaned_players: {
-                type: 'tick',
-                selector: '#Detailsuche_leihen'
-            }
-        }*/
+            exclude_new_contract: true,
+            active_players_only: true,
+            players_without_club_only: true,
+            exclude_loaned_players: true
+        }
     }
 
     // An object with the same schema of the request but filled with the associated selectors.
@@ -203,70 +171,70 @@ const puppeteer = require('puppeteer');
                 selector: '#Detailsuche_genaue_suche_geburtsort'
             },
             citizenship: {
-                type: 'select',
-                selector: '#Detailsuche_land_id'
+                type: 'select_1',
+                selector: '#Detailsuche_land_id_chzn'
             },
             second_citizenship: {
-                type: 'select',
-                selector: '#Detailsuche_zweites_land_id'
+                type: 'select_1',
+                selector: '#Detailsuche_zweites_land_id_chzn'
             },
             birth_country: {
-                type: 'select',
-                selector: '#Detailsuche_geb_land_id'
+                type: 'select_1',
+                selector: '#Detailsuche_geb_land_id_chzn'
             },
             player_confederation: {
-                type: 'select',
-                selector: '#Detailsuche_kontinent_id'
+                type: 'select_1',
+                selector: '#Detailsuche_kontinent_id_chzn'
             },
             birth_day: {
-                type: 'select',
-                selector: '#Detailsuche_geburtstag'
+                type: 'select_1',
+                selector: '#Detailsuche_geburtstag_chzn'
             },
             birth_month: {
-                type: 'select',
-                selector: '#Detailsuche_geburtsmonat'
+                type: 'select_1',
+                selector: '#Detailsuche_geburtsmonat_chzn'
             },
             birth_year: {
-                type: 'select',
-                selector: '#Detailsuche_geburtsjahr'
+                type: 'select_1',
+                selector: '#Detailsuche_geburtsjahr_chzn'
             },
             age: {
-                type: 'fill',
+                type: 'fill_default',
                 selector: '#amountAlter'
             },
             year:  {
-                type: 'fill',
+                type: 'fill_default',
                 selector: '#amountJahrgang'
             },
             height:  {
-                type: 'fill',
+                type: 'fill_default',
                 selector: '#amountGroesse'
             }
 
         },
         player_data: {
             position: {
-                type: 'select',
-                selector: '#Detailsuche_position'
+                type: 'select_2',
+                selector: '#Detailsuche_position_chzn'
             },
             main_position: {
-                type: 'select',
-                selector: '#Detailsuche_hauptposition_id'
+                type: 'select_1',
+                selector: '#Detailsuche_hauptposition_id_chzn'
             },
             other_position_1: {
-                type: 'select',
-                selector: '#Detailsuche_nebenposition_id_1'
+                type: 'select_1',
+                selector: '#Detailsuche_nebenposition_id_1_chzn'
             },
             other_position_2:    {
-                type: 'select',
-                selector: '#Detailsuche_nebenposition_id_2'
+                type: 'select_1',
+                selector: '#Detailsuche_nebenposition_id_2_chzn'
             },
             market_value_from: {
-                type: 'fill',
+                type: 'fill_default',
                 selector: '#Detailsuche_minMarktwert'
             } ,
             market_value_until: {
-                type: 'fill',
+                type: 'fill_default',
                 selector: '#Detailsuche_maxMarktwert'
             } ,
             left_foot: {
@@ -294,31 +262,31 @@ const puppeteer = require('puppeteer');
                 selector: '#Detailsuche_rn'
             },
             contract_expiry: {
-                type: 'select',
-                selector: '#Detailsuche_vertrag'
+                type: 'select_2',
+                selector: '#Detailsuche_vertrag_chzn'
             },
-            competition: {
+            /*competition: {
                 type: 'fill',
                 selector: '#token-input-Detailsuche_wettbewerb_id'
-            },
+            },*/ // Hard to have a handl on. Linked to some background JS.
             division: {
-                type: 'select',
-                selector: '#Detailsuche_art_neu'
+                type: 'select_2',
+                selector: '#Detailsuche_art_neu_chzn'
             },
             club_from: {
-                type: 'select',
-                selector: '#Detailsuche_w_land_id'
+                type: 'select_1',
+                selector: '#Detailsuche_w_land_id_chzn'
             }
 
         },
         national_team_data: {
             national_team_players:{
-                type: 'fill',
-                selector: '#Detailsuche_nm_status'
+                type: 'select_2',
+                selector: '#Detailsuche_nm_status_chzn'
             }, 
             national_team_appearances: {
-                type: 'fill',
-                selector: '#Detailsuche_passname'
+                type: 'fill_default',
+                selector: '#amountNmSpiele'
             }
         },
         contract_active: {
@@ -341,11 +309,76 @@ const puppeteer = require('puppeteer');
         }
     }
 
+    // Data conformity checker
+    async function check(data){
+
+        // Validation of the object form
+        try{
+            await schema_player_search.validate(data)
+        } catch (error){
+            console.log(`[-] Error: ${error}.`)
+            return false
+        }
+
+        // Valiation of the object content
+        if(!(
+                countries.includes(data.personal_data.citizenship) ||
+                countries.includes(data.personal_data.second_citizenship) ||
+                countries.includes(data.personal_data.birth_country) ||
+                countries.includes(data.player_data.club_from) ||
+                confederations.includes(data.personal_data.player_confederation) ||
+                (()=>{
+                    data.player_data.position.forEach((element)=>{
+                        if(!positions.includes(element)){
+                            return false
+                        }
+                        return true
+                    })
+                }) ||
+                (()=>{
+                    data.player_data.contract_expiry.forEach((element)=>{
+                        if(!years.includes(element)){
+                            return false
+                        }
+                        return true
+                    })
+                }) ||
+                (()=>{
+                    data.player_data.division.forEach((element)=>{
+                        if(!divisions.includes(element)){
+                            return false
+                        }
+                        return true
+                    })
+                }) ||
+                (()=>{
+                    data.national_team_data.national_team_players.forEach((element)=>{
+                        if(!stati.includes(element)){
+                            return false
+                        }
+                        return true
+                    })
+                }) 
+            ) && 
+            !(
+                data.player_data.position.isArray() ||
+                data.player_data.contract_expiry.isArray() ||
+                data.player_data.division.isArray() ||
+                data.national_team_data.national_team_players.isArray()
+            )){
+                return false
+            } else {
+                return true
+            }
+
+    }
+
     // Generic functions to fill the form.
-
-    async function fill(selector, text){
-
+    async function fill(type, selector, text){
         await page.waitForSelector(selector)
+        if(type.includes('default')){
+            await page.click(selector, {clickCount:3})
+        }
         for await (const char of text.toString().split('')){
             await page.type(selector, char)
         }
@@ -359,46 +392,46 @@ const puppeteer = require('puppeteer');
 
     }
 
-    async function select(selector, option){
-
-        await page.waitForSelector(selector)
-        await page.select(selector, option)
+    async function select(type, selector, option){
+        if(type.includes('1')){
+            await page.waitForSelector(selector)
+            await page.click(selector + '> a')
+            await fill('fill', selector + '> div > div > input[type=search]', option)
+            await page.click(selector + '> div > ul > li.active-result.highlighted')
+        }else {
+            await page.waitForSelector(selector)
+            await page.click(selector + '> ul')
+            for await (const element of option){
+                await fill('fill', selector + '> ul > li > input', element)
+                await page.click(selector + '> div > ul > li.active-result.highlighted')
+            }
+            
+        }
 
     }
 
-    // scrape the countries | #Detailsuche_land_id
-    const countries = await page.$$eval('#Detailsuche_land_id > option:nth-child(n+2)', (countries)=>{
-        return Array.from(countries, country=>{
-            return [country.getAttribute('value'), country.textContent]
-        })
-    })
-    console.log(countries)
-    // scrape the confederations | #Detailsuche_kontinent_id
-
-    // position | #Detailsuche_hauptposition_id
-    // division | #Detailsuche_art_neu
-    // national team player | #Detailsuche_nm_status
-
-
+    
     // Main handler
 
     async function fill_form(data){
         for await (const section of Object.entries(data)){
+            console.log(section)
             for await (const field of Object.entries(section[1])){
-
+                console.log(field)
                 const input = form_schema[section[0]][field[0]]
+                console.log(input)
                 const value = field[1]
 
-                if(input.type==='fill'){
-                    await fill(input.selector, value)
+                if(input.type.includes('fill')){
+                    await fill(input.type, input.selector, value)
                 }
 
                 if(input.type==='tick' && value===true){
                    await tick(input.selector) 
                 }
 
-                if(input.type==='select'){
-                    await select(input.selector, value)
+                if(input.type.includes('select')){
+                    await select(input.type, input.selector, value)
                 }
             }
         }
@@ -406,6 +439,7 @@ const puppeteer = require('puppeteer');
 
     // Fill the form
 
+    console.log(await check(data))
     await fill_form(data)
 
     // Click on submit.
