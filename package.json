@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/benhichem/Soccer-Players-filter#readme",
   "dependencies": {
+    "joi": "^17.6.0",
     "node-html-parser": "^5.3.3",
     "nodemon": "^2.0.16",
     "puppeteer": "^14.3.0"
