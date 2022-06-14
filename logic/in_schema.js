@@ -10,6 +10,7 @@ const schema_player_search = Joi.object({
     }),
     personal_data: Joi.object({
         birth_place: Joi.string(),
+        exact_search: Joi.bool(),
         citizenship: Joi.string(),
         second_citizenship: Joi.string(),
         birth_country: Joi.string(),
@@ -29,7 +30,7 @@ const schema_player_search = Joi.object({
 
     }),
     player_data: Joi.object({
-        position: Joi.string(),
+        position: Joi.array().items(Joi.string()).unique(),
         main_position: Joi.string(),
         other_position_1: Joi.string(),
         other_position_2: Joi.string(),
@@ -43,14 +44,14 @@ const schema_player_search = Joi.object({
         player_number: Joi.number()
             .min(0)
             .max(99),
-        contract_expiry: Joi.number(),
+        contract_expiry: Joi.array().items(Joi.string()).unique(),
         /*competition: Joi.string(),*/ 
-        division: Joi.string(),
+        division: Joi.array().items(Joi.string()).unique(),
         club_from: Joi.string()
 
     }),
     national_team_data: Joi.object({
-        national_team_players: Joi.string(),
+        national_team_players: Joi.array().items(Joi.string()).unique(),
         national_team_appearances: Joi.string()
     }),
     contract_active: Joi.object({
