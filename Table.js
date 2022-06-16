@@ -1,59 +1,94 @@
 const puppeteer = require("puppeteer");
+const renameKeys = require("rename-keys");
 
-const LinkOne =
+/* const LinkOne =
   "https://www.transfermarkt.com/detailsuche/spielerdetail/suche/35459274";
 const LinkTwo =
   "https://www.transfermarkt.com/detailsuche/spielerdetail/suche/35456537";
 const LinkThre =
   "https://www.transfermarkt.com/detailsuche/spielerdetail/suche/35493749";
+const NoResult =
+  "https://www.transfermarkt.com/detailsuche/spielerdetail/suche/35512400"; */
 
-const Main = async () => {
+const GetTable = async (link) => {
   const AllPlayers = [];
   const browser = await puppeteer.launch({
     args: ["--no-sandbox"],
     headless: false,
   });
   const page = await browser.newPage();
-  await page.goto(LinkOne, {
+  await page.goto(link, {
     waitUntil: ["load", "domcontentloaded", "networkidle0", "networkidle2"],
   });
   await page.waitForTimeout(5000);
-  console.log(`[+] Looking For the Player Table Table`);
-  await page.waitForSelector("table.items");
-  const Links = await page.evaluate(async () => {
-    console.log(`[+] Looking if its multiple pages `);
-    const HTML = Array.from(document.querySelectorAll("a.tm-pagination__link"));
-    const list = HTML.map((item) => {
-      return item.href;
-    }).slice(0, -2);
-    return list;
-  });
-  if (Links.length === 0) {
-    console.log(`[+] only one link Getting players`);
-    const TestOne = await PlayerScraping(
-      page,
-      "https://www.transfermarkt.com/detailsuche/spielerdetail/suche/35441755"
-    );
-    AllPlayers.push(TestOne);
+  // Removes the cookies popup
+
+  const popup_frame = await page.waitForSelector("#sp_message_iframe_575843");
+  const frame = await popup_frame.contentFrame();
+  const buttons = await frame.$x("/html/body/div/div[2]/div[3]/div[2]/button");
+  await buttons[0].click();
+
+  console.log("[+] Looking if there is Results");
+  const AllerNoResults = await page.$("div .alert-box.alert");
+
+  if (AllerNoResults) {
+    browser.close();
+    console.log("[-] Advanced search generated no result.");
+    return "Advanced search generated no result.";
   } else {
-    console.log(`[+] Multiple Pages ${Links.length} Starting the Loop `);
-    for (var i = 0; i < Links.length; ++i) {
-      const TestTwo = await PlayerScraping(page, Links[i]);
-      console.log(`PageLink ${Links[i]}`);
-      console.log(`Page ${i} Has being scrapped`);
-      AllPlayers.push(TestTwo);
+    console.log(`[+] Looking For the Player Table Table`);
+    await page.waitForSelector("table.items");
+    const Links = await page.evaluate(async () => {
+      console.log(`[+] Looking if its multiple pages `);
+      const HTML = Array.from(
+        document.querySelectorAll("a.tm-pagination__link")
+      );
+      const list = HTML.map((item) => {
+        return item.href;
+      }).slice(0, -2);
+      return list;
+    });
+    let Headers = await page.evaluate(async () => {
+      const HeadersItems = Array.from(document.querySelectorAll("th"));
+      const HeadersInnerText = HeadersItems.map((item) => {
+        return item.textContent.replace(/ /g, "_").trimEnd();
+      });
+      HeadersInnerText[0] = "Player_Number_and_Positions";
+      let newARray = HeadersInnerText.map((item) => {
+        if (item.includes("/")) {
+          return item.replace("/", "and");
+        }
+        if (item.includes(".")) {
+          return item.slice(0, -1);
+        } else {
+          return item;
+        }
+      });
+      return newARray;
+    });
+
+    if (Links.length === 0) {
+      console.log(`[+] only one link Getting players`);
+      const TestOne = await PlayerScraping(page, link, Headers);
+      browser.close();
+      console.log(TestOne[0]);
+      return TestOne;
+    } else {
+      console.log(`[+] ${Links.length} Pages Starting the Loop `);
+      for (var i = 0; i < Links.length; ++i) {
+        const TestTwo = await PlayerScraping(page, Links[i], Headers);
+        console.log(`PageLink ${Links[i]}`);
+        console.log(`Page ${i} Has being scrapped`);
+        AllPlayers.push(TestTwo);
+      }
+
+      browser.close();
+      return AllPlayers;
     }
-    console.log(AllPlayers);
-    console.log(AllPlayers[0][0]);
-    return AllPlayers;
   }
-  browser.close();
 };
 
-console.log("Starting The Script");
-Main();
-
-const PlayerScraping = async (page, link) => {
+const PlayerScraping = async (page, link, Headers) => {
   console.log(`[+] Going to ${link}`);
   await page.goto(link, {
     waitUntil: ["load", "domcontentloaded", "networkidle0", "networkidle2"],
@@ -124,6 +159,7 @@ const PlayerScraping = async (page, link) => {
         return item.textContent;
       }
     }
+
     const Table2 = await Array.from(
       document.querySelectorAll("table.items tr.even")
     );
@@ -136,14 +172,30 @@ const PlayerScraping = async (page, link) => {
       const list = Array.from(Tablerows[i].querySelectorAll("td"));
       const T = list.map((item) => {
         return {
-          value: GetCellContent(item),
-          index: GetCellIndex(item),
+          item: GetCellContent(item),
+          id: GetCellIndex(item),
         };
       });
       FinalList.push(T);
     }
-    return FinalList;
+    const GroupingObjectByID = FinalList.map((item) => {
+      const results = item.reduce(function (results, item) {
+        (results[item.id] = results[item.id] || []).push(item.item);
+        return results;
+      }, {});
+      return results;
+    });
+    return GroupingObjectByID;
   });
 
-  return Table;
+  const RenameCunts = Table.map((item) => {
+    return renameKeys(item, function (key, val) {
+      return Headers[key];
+    });
+  });
+  return RenameCunts;
 };
+
+console.log("Starting The Script");
+
+module.exports = GetTable;
